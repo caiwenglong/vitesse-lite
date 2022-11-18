@@ -7,6 +7,15 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    AAvatar: typeof import('ant-design-vue/es')['Avatar']
+    AButton: typeof import('ant-design-vue/es')['Button']
+    AForm: typeof import('ant-design-vue/es')['Form']
+    AFormItem: typeof import('ant-design-vue/es')['FormItem']
+    AInputPassword: typeof import('ant-design-vue/es')['InputPassword']
+    AList: typeof import('ant-design-vue/es')['List']
+    AListItem: typeof import('ant-design-vue/es')['ListItem']
+    AListItemMeta: typeof import('ant-design-vue/es')['ListItemMeta']
+    ATextarea: typeof import('ant-design-vue/es')['Textarea']
     Counter: typeof import('./src/components/Counter.vue')['default']
     Footer: typeof import('./src/components/Footer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
