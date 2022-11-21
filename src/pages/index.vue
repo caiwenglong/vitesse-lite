@@ -2,62 +2,141 @@
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 import 'swiper/css/pagination'
-import { Pagination } from 'swiper'
-const modules = [Pagination]
-const listData: Record<string, string>[] = []
+import { Autoplay, Pagination } from 'swiper'
+import _ from 'lodash'
+import { message } from 'ant-design-vue'
+import type { LifeMottoItem } from '~/typings/motto'
+import { apiGetData } from '~/service/supabase'
+import 'ant-design-vue/es/message/style/css'
+
+const lifeMottoList: LifeMottoItem[] = reactive([]) // motto list
+const spinning = ref<boolean>(true)
+const modules = [Pagination, Autoplay]
+
+/**
+ * 根据返回值显示隐藏遮罩
+ * @param flag
+ */
+const handleShowSpin = (flag: boolean) => {
+  spinning.value = flag
+}
+
+function handleTurnData(res: any) {
+  const status = res.status
+  if (res?.data?.length) {
+    _.forEach(res.data, (item) => {
+      lifeMottoList.push(item)
+    })
+  }
+
+  if (status === 200)
+    message.success('数据加载成功！')
+  handleShowSpin(false)
+}
+
+/**
+ * 从后端获取数据
+ */
+async function getLifeMottoList() {
+  try {
+    handleShowSpin(true)
+    let result = await apiGetData()
+    result = handleTurnData(result)
+  }
+  catch (error) {
+    // message.error(error)
+    // message.error(error)
+  }
+}
+
+onMounted(() => {
+  getLifeMottoList()
+})
 </script>
 
 <template>
-  <div class="page-motto-list" h-full>
-    <div class="page-motto-list__header">
-      123123
-    </div>
-    <div class="page-motto-list__body">
-      <Swiper direction="vertical" :pagination="{ clickable: true }" :modules="modules" class="mySwiper">
-        <template v-for="(item, index) in items" v-if="index < 10">
-          <a-list item-layout="vertical" size="large" :pagination="pagination" :data-source="listData">
-            <template #renderItem="{ item }">
-              <a-list-item key="item.title">
+  <div class="page-motto-list p-10 overflow-hidden" h-full>
+    <a-spin tip="Loading..." :spinning="spinning">
+      <div class="page-motto-list__header flex items-center justify-center">
+        <h3 class="page-motto-list__header-text">
+          标题
+        </h3>
+      </div>
+      <div class="page-motto-list__body">
+        <Swiper
+          :autoplay="{
+            delay: 2500,
+            disableOnInteraction: false,
+          }" :pagination="{
+            clickable: true,
+          }" :modules="modules" class="mySwiper"
+        >
+          <SwiperSlide v-for="(item) in lifeMottoList" :key="item.id">
+            <div w-full class="p-4">
+              <a-card w-full>
                 <template #actions>
-                  <span v-for="{ type, text } in actions" :key="type">
-                    <component :is="type" style="margin-right: 8px" />
-                    {{ text }}
-                  </span>
+                  <a-tooltip>
+                    <template #title>
+                      赞一下
+                    </template>
+                    <LikeOutlined key="like" />
+                  </a-tooltip>
+                  <a-tooltip>
+                    <template #title>
+                      踩一下
+                    </template>
+                    <DislikeOutlined key="dislike" />
+                  </a-tooltip>
+                  <a-tooltip>
+                    <template #title>
+                      评论
+                    </template>
+                    <EditOutlined key="edit" />
+                  </a-tooltip>
+                  <a-tooltip>
+                    <template #title>
+                      查看更多评论
+                    </template>
+                    <EllipsisOutlined key="ellipsis" />
+                  </a-tooltip>
                 </template>
-                <template #extra>
-                  <img width="272" alt="logo"
-                    src="https://gw.alipayobjects.com/zos/rmsportal/mqaQswcyDLcXyDKnZfES.png" />
-                </template>
-                <a-list-item-meta :description="item.description">
-                  <template #title>
-                    <a :href="item.href">{{ item.title }}</a>
-                  </template>
+                <a-card-meta class="text-left" :title="item.creator" :description="item">
                   <template #avatar>
-                    <a-avatar :src="item.avatar" />
+                    <a-avatar src="https://joeschmoe.io/api/v1/random" />
                   </template>
-                </a-list-item-meta>
-                {{ item.content }}
-              </a-list-item>
-            </template>
-          </a-list>
-        </template>
-      </Swiper>
-    </div>
+                </a-card-meta>
+              </a-card>
+            </div>
+          </SwiperSlide>
+        </Swiper>
+      </div>
+    </a-spin>
   </div>
 </template>
 
 <style scoped lang="scss">
 .page-motto-list__header {
-  height: 20%;
+  height: 10%;
+
+  &-text {
+    text-decoration: none;
+    color: hsla(160, 100%, 37%, 1);
+    transition: 0.4s;
+  }
 }
 
 .page-motto-list__body {
-  height: 80%;
+  height: 40%;
+  overflow: hidden
 }
 
 .swiper {
   width: 100%;
   height: 100%;
+
+  :deep(.swiper-pagination) {
+    display: none !important;
+  }
 }
 
 .swiper-slide {
